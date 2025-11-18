@@ -291,7 +291,6 @@ function boolToYN(b) { return b ? 'Y' : 'N'; }
 
 
 // Menu entry
-// TODO: Add product refresh that will not overwrite existing data in columns V, W and X. 
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Replenishment')
