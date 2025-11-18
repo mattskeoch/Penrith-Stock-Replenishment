@@ -4,6 +4,8 @@
  * API_VERSION = 2024-10
  ****************************************************************/
 
+//TODO: Product freshfresh most not overwrite data in columns V, W and X
+
 const SHOP = (PropertiesService.getScriptProperties().getProperty('SHOP_DOMAIN') || '').trim();
 const TOKEN = (PropertiesService.getScriptProperties().getProperty('ADMIN_TOKEN') || '').trim();
 const API = (PropertiesService.getScriptProperties().getProperty('API_VERSION') || '2024-10').trim();
