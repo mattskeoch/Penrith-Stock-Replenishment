@@ -4,9 +4,9 @@
  * API_VERSION = 2024-10
  ****************************************************************/
 
-const SHOP  = (PropertiesService.getScriptProperties().getProperty('SHOP_DOMAIN') || '').trim();
+const SHOP = (PropertiesService.getScriptProperties().getProperty('SHOP_DOMAIN') || '').trim();
 const TOKEN = (PropertiesService.getScriptProperties().getProperty('ADMIN_TOKEN') || '').trim();
-const API   = (PropertiesService.getScriptProperties().getProperty('API_VERSION') || '2024-10').trim();
+const API = (PropertiesService.getScriptProperties().getProperty('API_VERSION') || '2024-10').trim();
 
 // Hard-code the single inventory location (must match Shopify Admin → Settings → Locations → Name)
 const LOCATION_NAME = 'Autospec 4x4 Penrith';
@@ -30,18 +30,18 @@ function refreshInventory() {
   }
   if (!TOKEN) throw new Error("SCRIPT PROPERTY 'ADMIN_TOKEN' (Admin API access token) is missing.");
 
-  const ss  = SpreadsheetApp.getActive();
+  const ss = SpreadsheetApp.getActive();
   const inv = ss.getSheetByName('InventoryLive');
   if (!inv) throw new Error("Missing sheet: InventoryLive");
 
   // Ensure headers exist (do NOT clear Column A)
-  inv.getRange(1, 1, 1, 6).setValues([['SKU','OnHand','Available','Committed','Inbound','LastSync']]);
+  inv.getRange(1, 1, 1, 6).setValues([['SKU', 'OnHand', 'Available', 'Committed', 'Inbound', 'LastSync']]);
 
   // Read SKU list from InventoryLive!A (manual list you maintain)
   const rowCount = Math.max(0, inv.getLastRow() - 1);
   if (rowCount === 0) { SpreadsheetApp.getUi().alert('No SKUs in InventoryLive!A'); return; }
   const aVals = inv.getRange(2, 1, rowCount, 1).getValues().flat();
-  const skus  = [...new Set(aVals.map(normalizeSku_).filter(Boolean))];
+  const skus = [...new Set(aVals.map(normalizeSku_).filter(Boolean))];
   if (!skus.length) { SpreadsheetApp.getUi().alert('No valid SKUs in InventoryLive!A'); return; }
 
   // Resolve location GID from name once
@@ -73,13 +73,13 @@ function refreshInventory() {
     for (const e of (data1?.data?.inventoryItems?.edges || [])) {
       const sku = (e.node?.sku || '').trim();
       const lvl = e.node?.inventoryLevel;
-      let on=0, av=0, co=0, inb=0;
+      let on = 0, av = 0, co = 0, inb = 0;
       if (Array.isArray(lvl?.quantities)) {
         for (const q of lvl.quantities) {
-          if (q.name==='on_hand') on += q.quantity || 0;
-          else if (q.name==='available') av += q.quantity || 0;
-          else if (q.name==='committed') co += q.quantity || 0;
-          else if (q.name==='incoming')  inb += q.quantity || 0;
+          if (q.name === 'on_hand') on += q.quantity || 0;
+          else if (q.name === 'available') av += q.quantity || 0;
+          else if (q.name === 'committed') co += q.quantity || 0;
+          else if (q.name === 'incoming') inb += q.quantity || 0;
         }
       }
       if (!on) on = av + co; // fallback if API omits on_hand
@@ -110,13 +110,13 @@ function refreshInventory() {
       for (const e of (data2?.data?.productVariants?.edges || [])) {
         const sku = (e.node?.sku || '').trim();
         const lvl = e.node?.inventoryItem?.inventoryLevel;
-        let on=0, av=0, co=0, inb=0;
+        let on = 0, av = 0, co = 0, inb = 0;
         if (Array.isArray(lvl?.quantities)) {
           for (const q of lvl.quantities) {
-            if (q.name==='on_hand') on += q.quantity || 0;
-            else if (q.name==='available') av += q.quantity || 0;
-            else if (q.name==='committed') co += q.quantity || 0;
-            else if (q.name==='incoming')  inb += q.quantity || 0;
+            if (q.name === 'on_hand') on += q.quantity || 0;
+            else if (q.name === 'available') av += q.quantity || 0;
+            else if (q.name === 'committed') co += q.quantity || 0;
+            else if (q.name === 'incoming') inb += q.quantity || 0;
           }
         }
         if (!on) on = av + co;
@@ -143,12 +143,12 @@ function refreshInventory() {
   const misses = aVals
     .map(v => normalizeSku_(v))
     .map((s, idx) => ({ s, idx }))
-    .filter(x => x.s && out[x.idx][0]===0 && out[x.idx][1]===0 && out[x.idx][2]===0 && out[x.idx][3]===0)
+    .filter(x => x.s && out[x.idx][0] === 0 && out[x.idx][1] === 0 && out[x.idx][2] === 0 && out[x.idx][3] === 0)
     .map(x => [x.s]);
   if (misses.length) {
     const dbg = ss.insertSheet(dbgName);
-    dbg.getRange(1,1,1,1).setValue('SKU not returned at location: ' + LOCATION_NAME);
-    dbg.getRange(2,1,misses.length,1).setValues(misses);
+    dbg.getRange(1, 1, 1, 1).setValue('SKU not returned at location: ' + LOCATION_NAME);
+    dbg.getRange(2, 1, misses.length, 1).setValues(misses);
   }
 }
 
@@ -164,7 +164,7 @@ function normalizeSku_(v) {
 
 function resolveLocationIdByName_(domain, token, api, name) {
   const host = domain.includes('://') ? domain.split('://')[1] : domain;
-  const url  = `https://${host}/admin/api/${api}/graphql.json`;
+  const url = `https://${host}/admin/api/${api}/graphql.json`;
   const query = `query { locations(first: 250) { edges { node { id name } } } }`;
   const res = UrlFetchApp.fetch(url, {
     method: 'post',
@@ -184,7 +184,7 @@ function resolveLocationIdByName_(domain, token, api, name) {
 
 function listLocationNames_(domain, token, api) {
   const host = domain.includes('://') ? domain.split('://')[1] : domain;
-  const url  = `https://${host}/admin/api/${api}/graphql.json`;
+  const url = `https://${host}/admin/api/${api}/graphql.json`;
   const query = `query { locations(first: 250) { edges { node { id name } } } }`;
   const res = UrlFetchApp.fetch(url, {
     method: 'post',
@@ -219,21 +219,21 @@ function shopifyGraphQL_(domain, token, api, query, variables) {
     });
 
     const code = res.getResponseCode();
-    const ct   = String(res.getHeaders()['Content-Type'] || '');
+    const ct = String(res.getHeaders()['Content-Type'] || '');
     const body = res.getContentText();
 
     if (code !== 200) {
-      throw new Error(`Shopify GraphQL HTTP ${code}; Content-Type=${ct}; Body[0..400]= ${body.slice(0,400)}`);
+      throw new Error(`Shopify GraphQL HTTP ${code}; Content-Type=${ct}; Body[0..400]= ${body.slice(0, 400)}`);
     }
     if (!/application\/json/i.test(ct)) {
-      throw new Error(`Expected JSON but got Content-Type=${ct}; Body[0..400]= ${body.slice(0,400)}`);
+      throw new Error(`Expected JSON but got Content-Type=${ct}; Body[0..400]= ${body.slice(0, 400)}`);
     }
 
     let parsed;
     try {
       parsed = JSON.parse(body);
     } catch (e) {
-      throw new Error(`JSON parse error: ${e.message}; Body[0..200]= ${body.slice(0,200)}`);
+      throw new Error(`JSON parse error: ${e.message}; Body[0..200]= ${body.slice(0, 200)}`);
     }
 
     if (parsed.errors) {
@@ -245,17 +245,17 @@ function shopifyGraphQL_(domain, token, api, query, variables) {
 }
 
 function debugPingShop() {
-  const SHOP  = (PropertiesService.getScriptProperties().getProperty('SHOP_DOMAIN') || '').trim();
+  const SHOP = (PropertiesService.getScriptProperties().getProperty('SHOP_DOMAIN') || '').trim();
   const TOKEN = (PropertiesService.getScriptProperties().getProperty('ADMIN_TOKEN') || '').trim();
-  const API   = (PropertiesService.getScriptProperties().getProperty('API_VERSION') || '2024-10').trim();
+  const API = (PropertiesService.getScriptProperties().getProperty('API_VERSION') || '2024-10').trim();
 
   const url = `https://${SHOP}/admin/api/${API}/graphql.json`;
   const query = '{ shop { name myshopifyDomain } }';
 
   const res = UrlFetchApp.fetch(url, {
-    method:'post',
-    contentType:'application/json',
-    headers: { 'Accept':'application/json', 'X-Shopify-Access-Token': TOKEN },
+    method: 'post',
+    contentType: 'application/json',
+    headers: { 'Accept': 'application/json', 'X-Shopify-Access-Token': TOKEN },
     payload: JSON.stringify({ query }),
     muteHttpExceptions: true,
     followRedirects: false
@@ -263,7 +263,7 @@ function debugPingShop() {
 
   Logger.log('HTTP %s', res.getResponseCode());
   Logger.log('Content-Type: %s', res.getHeaders()['Content-Type']);
-  Logger.log('Body[0..400]: %s', res.getContentText().slice(0,400));
+  Logger.log('Body[0..400]: %s', res.getContentText().slice(0, 400));
 }
 
 /***********************
@@ -273,15 +273,15 @@ const TARGET_VENDOR = 'Autospec 4x4';
 const ALLOWED_STATUSES = new Set(['ACTIVE', 'UNLISTED']); // include these only
 const EXCLUDED_TITLE_PREFIXES = ['Scratch & Dent -'];      // startsWith match, case-sensitive
 const EXCLUDED_PRODUCT_TYPES = [
-  'GWM Bundle','Bolt Fitting Kit','Bolt','Washer','Nut','Screw',
-  'Suspension','Nuts & Bolts','Colour Coding','Freight', 'Nutsert'
+  'GWM Bundle', 'Bolt Fitting Kit', 'Bolt', 'Washer', 'Nut', 'Screw',
+  'Suspension', 'Nuts & Bolts', 'Colour Coding', 'Freight', 'Nutsert'
 ];
 
 // helper: tag -> Supplier
 const SUPPLIER_TAG_MAP = { hct: 'Hangzhou Case Tools' };  // extend as needed
 const SUPPLIER_DEFAULT = '';
 function deriveSupplierFromTags_(tags, vendor) {
-  const set = new Set((tags||[]).map(t => String(t).trim().toLowerCase()).filter(Boolean));
+  const set = new Set((tags || []).map(t => String(t).trim().toLowerCase()).filter(Boolean));
   for (const key of Object.keys(SUPPLIER_TAG_MAP)) if (set.has(key.toLowerCase())) return SUPPLIER_TAG_MAP[key];
   return SUPPLIER_DEFAULT; // or: return vendor || SUPPLIER_DEFAULT;
 }
@@ -291,12 +291,12 @@ function boolToYN(b) { return b ? 'Y' : 'N'; }
 
 
 // Menu entry
+// TODO: Add product refresh that will not overwrite existing data in columns V, W and X. 
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Replenishment')
     .addItem('Refresh Inventory (autospec-group)', 'refreshInventory')
 }
-
 
 function refreshProductsExport() {
   const ss = SpreadsheetApp.getActive();
@@ -308,11 +308,11 @@ function refreshProductsExport() {
   const ALLOWED_STATUSES = new Set(['ACTIVE', 'UNLISTED']);
   const EXCLUDED_TITLE_PREFIXES = ['Scratch & Dent -'];
   const EXCLUDED_PRODUCT_TYPES = [
-    'GWM Bundle','Bolt Fitting Kit','Bolt','Washer','Nut','Screw',
-    'Suspension','Nuts & Bolts','Colour Coding','Freight','Nutsert'
+    'GWM Bundle', 'Bolt Fitting Kit', 'Bolt', 'Washer', 'Nut', 'Screw',
+    'Suspension', 'Nuts & Bolts', 'Colour Coding', 'Freight', 'Nutsert'
   ];
 
-  const queryStr = `(status:active OR status:unlisted) vendor:'${TARGET_VENDOR.replace(/'/g,"\\'")}'`;
+  const queryStr = `(status:active OR status:unlisted) vendor:'${TARGET_VENDOR.replace(/'/g, "\\'")}'`;
   const rows = [];
   const seenSku = new Set();
 
@@ -392,9 +392,9 @@ function refreshProductsExport() {
           p.id, p.title, p.vendor, p.productType, p.status,
           boolToYN(p.publishedOnCurrentPublication),
           p.updatedAt, p.handle, '',
-          String(o1.name||''), String(o1.value||''),
-          String(o2.name||''), String(o2.value||''),
-          String(o3.name||''), String(o3.value||''),
+          String(o1.name || ''), String(o1.value || ''),
+          String(o2.name || ''), String(o2.value || ''),
+          String(o3.name || ''), String(o3.value || ''),
           v.id, v.title, sku, supplier, rrp, cost
         ]);
       }
@@ -404,21 +404,21 @@ function refreshProductsExport() {
     if (pageInfo?.hasNextPage) after = pageInfo.endCursor; else break;
   }
 
-  rows.sort((a,b)=>{
-    const t1 = (a[1]||'').localeCompare(b[1]||'');
-    return t1!==0 ? t1 : (a[18]||'').localeCompare(b[18]||'');
+  rows.sort((a, b) => {
+    const t1 = (a[1] || '').localeCompare(b[1] || '');
+    return t1 !== 0 ? t1 : (a[18] || '').localeCompare(b[18] || '');
   });
 
   const headers = [
-    'ProductID','ProductTitle','Vendor','ProductType','Status','PublishedOnline',
-    'UpdatedAt','Handle','','Option1Name','Option1Value','Option2Name','Option2Value',
-    'Option3Name','Option3Value','VariantID','VariantTitle','VariantSKU',
-    'Supplier','RRP','Cost'
+    'ProductID', 'ProductTitle', 'Vendor', 'ProductType', 'Status', 'PublishedOnline',
+    'UpdatedAt', 'Handle', '', 'Option1Name', 'Option1Value', 'Option2Name', 'Option2Value',
+    'Option3Name', 'Option3Value', 'VariantID', 'VariantTitle', 'VariantSKU',
+    'Supplier', 'RRP', 'Cost'
   ];
 
   sh.clearContents();
-  sh.getRange(1,1,1,headers.length).setValues([headers]);
-  if (rows.length) sh.getRange(2,1,rows.length,headers.length).setValues(rows);
+  sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+  if (rows.length) sh.getRange(2, 1, rows.length, headers.length).setValues(rows);
   sh.setFrozenRows(1);
 }
 
